@@ -1,6 +1,5 @@
-from rest_framework.serializers import ModelSerializer, CharField, ValidationError, Serializer
+from rest_framework.serializers import ModelSerializer
 from django.contrib.auth.models import User
-
 
 class UserSerializer(ModelSerializer):
 
