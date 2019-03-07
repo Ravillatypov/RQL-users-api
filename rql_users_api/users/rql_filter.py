@@ -1,6 +1,8 @@
 from django.db.models import Q
 from rest_framework.filters import BaseFilterBackend
 from pyrql.parser import Parser
+from rest_framework.utils import model_meta
+
 
 class RQLFilterBackend(BaseFilterBackend):
     """
@@ -11,13 +13,16 @@ class RQLFilterBackend(BaseFilterBackend):
     query_name = 'q'
     _functions = ('in', 'eq', 'and', 'or')
 
-    def get_filterset_fields(self, view):
+    def get_filterset_fields(self, queryset, view):
         """
         get filterset_fields from view
         """
-        self.filterset_fields = getattr(view, 'filterset_fields', ())
+        self.filterset_fields = getattr(view, 'filterset_fields', None)
+        if self.filterset_fields is None:
+            info = model_meta.get_field_info(queryset.model)
+            self.filterset_fields = tuple(info.fields_and_pk)
         return self.filterset_fields
-    
+
     def get_conditions(self, args):
         """
         method `get_conditions` parse function name and arguments
@@ -54,7 +59,7 @@ class RQLFilterBackend(BaseFilterBackend):
         return result
 
     def filter_queryset(self, request, queryset, view):
-        self.get_filterset_fields(view)
+        self.get_filterset_fields(queryset, view)
         parser = Parser()
         try:
             self.rql = parser.parse(request.GET.get(self.query_name))
